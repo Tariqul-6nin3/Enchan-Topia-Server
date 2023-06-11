@@ -40,6 +40,9 @@ async function run() {
 
     const classCollection = client.db("enchanTopiaDB").collection("classes");
     const usersCollection = client.db("enchanTopiaDB").collection("users");
+    const bookedClassCollection = client
+      .db("enchanTopiaDB")
+      .collection("bookedClass");
     const addedClassCollection = client
       .db("enchanTopiaDB")
       .collection("addedClass");
@@ -68,6 +71,13 @@ async function run() {
       const result = await usersCollection.updateOne(query, updateDoc, options);
       console.log(result);
       res.send(result);
+    });
+
+    // Fetch user by email
+    app.get("/users", async (req, res) => {
+      const { email } = req.query;
+      const userData = await usersCollection.findOne({ email });
+      res.json(userData);
     });
 
     // Get user from the database by email
@@ -101,6 +111,14 @@ async function run() {
       } else {
         res.status(500).send({ message: "Failed to insert class" });
       }
+    });
+
+    // post booked class in database
+    app.post("/bookedclass", async (req, res) => {
+      const bookedClass = req.body;
+      const result = await bookedClassCollection.insertOne(bookedClass);
+      console.log(result);
+      res.send(result);
     });
 
     // get all user from db to show manage user
