@@ -73,11 +73,21 @@ async function run() {
       res.send(result);
     });
 
-    // Fetch user by email
+    // get all added class by instructor
+
+    app.get("/myclass", async (req, res) => {
+      const email = req.query.email;
+      const query = { addedby: email };
+      const cursor = await addedClassCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //get the logged in user
     app.get("/users", async (req, res) => {
       const { email } = req.query;
-      const userData = await usersCollection.findOne({ email });
-      res.json(userData);
+      const user = await usersCollection.findOne({ email });
+      res.json(user);
     });
 
     // Get user from the database by email
@@ -97,6 +107,15 @@ async function run() {
           .status(500)
           .json({ error: "An error occurred while retrieving the user" });
       }
+    });
+
+    // get specific user
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      console.log(result);
+      res.send(result);
     });
 
     // post new class added by instructor
