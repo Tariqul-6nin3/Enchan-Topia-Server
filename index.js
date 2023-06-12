@@ -3,6 +3,9 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(
+  "sk_test_51NI2P3HUp9RdPjle4CpqbaQptzExWRYySOJqddPBBLeQQ9umJLLxJX3sIOyOM7XCa7PwGyOzxUNMc699U1VIaJs800YwL1bN83"
+);
 
 // middleware
 const corsOptions = {
@@ -46,6 +49,22 @@ async function run() {
     const addedClassCollection = client
       .db("enchanTopiaDB")
       .collection("addedClass");
+
+    // generate client secret
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseFloat(price) * 100;
+      if (!price) return;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
     // get all classes as per descending with the number of students
 
