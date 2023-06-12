@@ -119,7 +119,7 @@ async function run() {
 
       try {
         const result = await bookedClassCollection.deleteOne(query);
-        res.json(result);
+        res.send(result);
       } catch (error) {
         console.log("Error deleting class:", error);
         res.status(500).send("Error deleting class");
