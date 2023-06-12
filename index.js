@@ -83,6 +83,30 @@ async function run() {
       res.send(result);
     });
 
+    // get selected classes
+    app.get("/selected/:email", async (req, res) => {
+      const email = req.params.email; // Access email as a route parameter
+      const query = { email: email };
+      const cursor = await bookedClassCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // delete selected classes
+    app.delete("/selected/:id", async (req, res) => {
+      const classId = req.params.id;
+      console.log(classId);
+      const query = { _id: new ObjectId(classId) };
+
+      try {
+        const result = await bookedClassCollection.deleteOne(query);
+        res.json(result);
+      } catch (error) {
+        console.log("Error deleting class:", error);
+        res.status(500).send("Error deleting class");
+      }
+    });
+
     //get the logged in user
     app.get("/users", async (req, res) => {
       const { email } = req.query;
@@ -141,7 +165,6 @@ async function run() {
     });
 
     // get all user from db to show manage user
-
     app.get("/alluser", async (req, res) => {
       const cursor = usersCollection.find();
       const result = await cursor.toArray();
@@ -175,6 +198,7 @@ async function run() {
         }
       }
     );
+
     // update the staus
     app.patch(
       "/classes/:userId",
@@ -202,13 +226,14 @@ async function run() {
         }
       }
     );
-    // get all class as per status
 
+    // get all class as per status
     app.get("/allclass", async (req, res) => {
       const cursor = addedClassCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
+
     // get all instructor information here
     app.get("/instructors", async (req, res) => {
       const cursor = addedClassCollection.find().project({
@@ -222,7 +247,6 @@ async function run() {
     });
 
     // get all approved class
-
     app.get("/approvedclass", async (req, res) => {
       const query = {
         status: "approved",
