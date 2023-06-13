@@ -117,13 +117,14 @@ async function run() {
     });
 
     // delete selected classes
-    app.delete("/selected/:id", async (req, res) => {
-      const classId = req.params.id;
+    app.delete("/selected/:email", async (req, res) => {
+      const classId = req.params.email;
       console.log(classId);
-      const query = { _id: new ObjectId(classId) };
+      const query = { instructorEmail: classId };
 
       try {
         const result = await bookedClassCollection.deleteOne(query);
+        console.log("this is result", { result });
         res.send(result);
       } catch (error) {
         console.log("Error deleting class:", error);
