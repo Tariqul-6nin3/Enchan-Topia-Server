@@ -43,6 +43,9 @@ async function run() {
 
     const classCollection = client.db("enchanTopiaDB").collection("classes");
     const usersCollection = client.db("enchanTopiaDB").collection("users");
+    const selectedClassCollection = client
+      .db("enchanTopiaDB")
+      .collection("selectedClass");
     const bookedClassCollection = client
       .db("enchanTopiaDB")
       .collection("bookedClass");
@@ -273,6 +276,13 @@ async function run() {
       const cursor = addedClassCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      const result = await selectedClassCollection.insertOne(booking);
+      console.log(result);
+      res.send({ insertedId: result.insertedId }); // Send only the insertedId field
     });
 
     await client.db("admin").command({ ping: 1 });
