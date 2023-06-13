@@ -6,6 +6,7 @@ const port = process.env.PORT || 5000;
 const stripe = require("stripe")(
   "sk_test_51NI2P3HUp9RdPjle4CpqbaQptzExWRYySOJqddPBBLeQQ9umJLLxJX3sIOyOM7XCa7PwGyOzxUNMc699U1VIaJs800YwL1bN83"
 );
+const bodyParser = require("body-parser");
 
 // middleware
 const corsOptions = {
@@ -15,6 +16,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -283,6 +285,19 @@ async function run() {
       const result = await selectedClassCollection.insertOne(booking);
       console.log(result);
       res.send({ insertedId: result.insertedId }); // Send only the insertedId field
+    });
+
+    app.patch("/class/status/:id", async (req, res) => {
+      const id = req.params.id;
+      const status = req.body.status;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          booked: status,
+        },
+      };
+      const update = await selectedClassCollection.updateOne(query, updateDoc);
+      res.send(update);
     });
 
     await client.db("admin").command({ ping: 1 });
