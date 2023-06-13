@@ -119,12 +119,9 @@ async function run() {
     // delete selected classes
     app.delete("/selected/:email", async (req, res) => {
       const classId = req.params.email;
-      console.log(classId);
       const query = { instructorEmail: classId };
-
       try {
         const result = await bookedClassCollection.deleteOne(query);
-        console.log("this is result", { result });
         res.send(result);
       } catch (error) {
         console.log("Error deleting class:", error);
@@ -299,6 +296,24 @@ async function run() {
       };
       const update = await selectedClassCollection.updateOne(query, updateDoc);
       res.send(update);
+    });
+    // get all enroll data
+    app.get("/enroll", async (req, res) => {
+      const cursor = await selectedClassCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get payment history
+    app.get("/payment", async (req, res) => {
+      try {
+        const cursor = await selectedClassCollection.find().sort({ date: -1 });
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch (error) {
+        console.log("Error retrieving payment history:", error);
+        res.status(500).send("Error retrieving payment history");
+      }
     });
 
     await client.db("admin").command({ ping: 1 });
