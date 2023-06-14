@@ -3,9 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
-const stripe = require("stripe")(
-  "sk_test_51NI2P3HUp9RdPjle4CpqbaQptzExWRYySOJqddPBBLeQQ9umJLLxJX3sIOyOM7XCa7PwGyOzxUNMc699U1VIaJs800YwL1bN83"
-);
+const stripe = require("stripe")(process.env.SECRET_KEY);
 const bodyParser = require("body-parser");
 
 // middleware
