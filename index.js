@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
@@ -23,8 +24,7 @@ app.get("/", (req, res) => {
 // mongodb operations
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const { verifyJwt } = require("./middleware/verifyJwt");
-const verifyRole = require("./middleware/verifyRole");
+
 const uri = `mongodb+srv://${process.env.USER_USERNAME}:${process.env.USER_PASSWORD}@cluster0.jsico6b.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,10 +36,14 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+};
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const classCollection = client.db("enchanTopiaDB").collection("classes");
     const usersCollection = client.db("enchanTopiaDB").collection("users");
@@ -52,6 +56,16 @@ async function run() {
     const addedClassCollection = client
       .db("enchanTopiaDB")
       .collection("addedClass");
+
+    // Generate JWT token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.send({ token });
+    });
 
     // generate client secret
     app.post("/create-payment-intent", async (req, res) => {
@@ -72,7 +86,7 @@ async function run() {
     // get all classes as per descending with the number of students
 
     app.get("/popularClass", async (req, res) => {
-      const cursor = classCollection
+      const cursor = addedClassCollection
         .find()
         .sort({ number_of_students: -1 })
         .limit(6);
@@ -192,60 +206,46 @@ async function run() {
     });
 
     // make the user role to admin and instructor
-    app.patch(
-      "/users/:userId",
-      verifyJwt,
-      verifyRole("admin"),
-      async (req, res) => {
-        try {
-          const userId = req.params.userId;
-          console.log(userId);
-          const role = req.body;
-          console.log(role);
-          const filter = { _id: new ObjectId(userId) };
-          const options = { upsert: true };
-          const update = { $set: role };
+    app.patch("/users/:userId", async (req, res) => {
+      try {
+        const userId = req.params.userId;
+        console.log(userId);
+        const role = req.body;
+        console.log(role);
+        const filter = { _id: new ObjectId(userId) };
+        const options = { upsert: true };
+        const update = { $set: role };
 
-          const result = await usersCollection.updateOne(
-            filter,
-            update,
-            options
-          );
-          res.send(result);
-        } catch (error) {
-          console.error(error);
-          res.status(500).send("Error updating user role");
-        }
+        const result = await usersCollection.updateOne(filter, update, options);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating user role");
       }
-    );
+    });
 
     // update the staus
-    app.patch(
-      "/classes/:userId",
-      verifyJwt,
-      verifyRole("admin"),
-      async (req, res) => {
-        try {
-          const userId = req.params.userId;
-          console.log(userId);
-          const status = req.body;
-          console.log(status);
-          const filter = { _id: new ObjectId(userId) };
-          const options = { upsert: true };
-          const update = { $set: status };
+    app.patch("/classes/:userId", async (req, res) => {
+      try {
+        const userId = req.params.userId;
+        console.log(userId);
+        const status = req.body;
+        console.log(status);
+        const filter = { _id: new ObjectId(userId) };
+        const options = { upsert: true };
+        const update = { $set: status };
 
-          const result = await addedClassCollection.updateOne(
-            filter,
-            update,
-            options
-          );
-          res.send(result);
-        } catch (error) {
-          console.error(error);
-          res.status(500).send("Error updating user role");
-        }
+        const result = await addedClassCollection.updateOne(
+          filter,
+          update,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating user role");
       }
-    );
+    });
 
     // get all class as per status
     app.get("/allclass", async (req, res) => {
@@ -314,7 +314,7 @@ async function run() {
       }
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
